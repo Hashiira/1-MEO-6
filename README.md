@@ -15,3 +15,10 @@ x0 = np.array([1, 1])
 
 res = minimize(f, x0, method='BFGS', jac=grad_f, tol=1e-8)
 res
+import numpy as np
+from scipy.optimize import minimize
+f = lambda x: -(5*np.log(x[0]) + 3*np.log(x[1]) - 2*x[1] - 2*x[0]*x[1])
+grad_f = lambda x: np.array([-(5/x[0] - 2*x[1]), -(3/x[1] - 2 - 2*x[0])])
+x0 = np.array([1, 1])
+res = minimize(f, x0, method='BFGS', jac=grad_f, tol=1e-8)
+res
