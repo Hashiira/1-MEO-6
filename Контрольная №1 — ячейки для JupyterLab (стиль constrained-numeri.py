@@ -1,170 +1,133 @@
-# %% Ячейка 0. Импорт
+#Вопрос 1, вариант А (графически, округлить до целого)
+#Условие: min(5x + 2y) при 3x + 2y ≥ 10, x + 2y ≥ 6, x + 4y ≥ 8, x, y ≥ 0.
+
+import numpy as np
+from scipy.optimize import linprog
+
+c = np.array([5, 2])
+A = np.array([[-3, -2], [-1, -2], [-1, -4]])
+b = np.array([-10, -6, -8])
+
+res = linprog(c, A_ub=A, b_ub=b)
+
+if not res.success:
+    print('Нет решения -> ставь нули')
+else:
+    x, y = np.round(res.x) + 0.0
+    print('x =', int(x), ' y =', int(y), ' целевая =', int(np.round(res.fun)))
+
+##Вопрос 1, вариант Б (графически, округлить до целого)
+
+#Условие: min(2x + 4y) при 5x + 2y ≥ 16, x + y ≥ 5, x + 5y ≥ 9, x, y ≥ 0.
+
+import numpy as np
+from scipy.optimize import linprog
+
+c = np.array([2, 4])
+A = np.array([[-5, -2], [-1, -1], [-1, -5]])
+b = np.array([-16, -5, -9])
+
+res = linprog(c, A_ub=A, b_ub=b)
+
+if not res.success:
+    print('Нет решения -> ставь нули')
+else:
+    x, y = np.round(res.x) + 0.0
+    print('x =', int(x), ' y =', int(y), ' целевая =', int(np.round(res.fun)))
+
+#Ответ: x = 4, y = 1, целевая = 12.
+
+#Вопрос 2 (аналитически, округлить до 1 знака)
+
+#Условие: max(3x + y − 2x² − 5y² + 6xy) при x + 2y ≤ 35.
+import sympy as sp
+
+x, y, lam = sp.symbols('x y lam')
+f = 3*x + y - 2*x**2 - 5*y**2 + 6*x*y
+g = x + 2*y - 35                      # ограничение: g <= 0
+
+s = sp.solve([sp.diff(f, x), sp.diff(f, y)], [x, y], dict=True)[0]
+
+if g.subs(s) <= 0:
+    xs, ys = s[x], s[y]
+else:
+    L = f - lam*g
+    s = sp.solve([sp.diff(L, x), sp.diff(L, y), g], [x, y, lam], dict=True)[0]
+    xs, ys = s[x], s[y]
+
+print('x =', round(float(xs), 1), ' y =', round(float(ys), 1))
+
+#Ответ: x = 9.0, y = 5.5.
+
+#Вопрос 3 (численно, округлить до 2 знаков)
+
+#Условие: min(2x² + 3y² + 2z² + 2xy − 2xz) при x + 5y + 3z ≥ 3, x, y, z ≥ 0.
+
+
 import numpy as np
 from scipy.optimize import minimize
 
+def f(v):
+    x, y, z = v
+    return 2*x**2 + 3*y**2 + 2*z**2 + 2*x*y - 2*x*z
 
-# %% Задача 1. min(5x² + y² − 4xy − 2x − 4y)  s.t.  2x + y = 5
-# Целевая функция f(x) и её градиент
-def f(x):
-    return 5*x[0]**2 + x[1]**2 - 4*x[0]*x[1] - 2*x[0] - 4*x[1]
-def grad_f(x):
-    return np.array([10*x[0] - 4*x[1] - 2, 2*x[1] - 4*x[0] - 4])
+cons = [{'type': 'ineq', 'fun': lambda v: v[0] + 5*v[1] + 3*v[2] - 3}]
 
-# ограничения равенства задаём в виде словаря
-constr = {'type': 'eq',
-          'fun': lambda x: 2*x[0] + x[1] - 5,
-          'jac': lambda x: np.array([2, 1]) }
+res = minimize(f, x0=[1, 1, 1], bounds=[(0, None)]*3, constraints=cons,
+               method='SLSQP', options={'ftol': 1e-12})
 
-# Начальное приближение
-x0 = np.array([1, 1])
+if not res.success:
+    print('Нет решения -> ставь нули')
+else:
+    x, y, z = np.round(res.x, 2) + 0.0
+    print('x =', x, ' y =', y, ' z =', z)
 
-res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr], tol=1e-9)
+#Ответ: x = 0.16, y = 0.32, z = 0.41.
 
-print(res)
+#Вопрос 4 (численно, ЛП, округлить до 2 знаков)
 
-# %% Ответ с округлением (один знак)
-res.x.round(1)
-# x = 1.0, y = 3.0
+#Условие: min(3x + 2y + z) при 2x + 2y + z ≥ 9, 4x + y + 2z ≥ 11, x, y, z ≥ 0.
 
 
-# %% Задача 2. min(5x² + 2y² − 6xy − 4x − 4y)  s.t.  2x + y = 6
-# Целевая функция f(x) и её градиент
-def f(x):
-    return 5*x[0]**2 + 2*x[1]**2 - 6*x[0]*x[1] - 4*x[0] - 4*x[1]
-def grad_f(x):
-    return np.array([10*x[0] - 6*x[1] - 4, 4*x[1] - 6*x[0] - 4])
+import numpy as np
+from scipy.optimize import linprog
 
-# ограничения равенства задаём в виде словаря
-constr = {'type': 'eq',
-          'fun': lambda x: 2*x[0] + x[1] - 6,
-          'jac': lambda x: np.array([2, 1]) }
+c = np.array([3, 2, 1])
+A = np.array([[-2, -2, -1], [-4, -1, -2]])
+b = np.array([-9, -11])
 
-# Начальное приближение
-x0 = np.array([1, 1])
+res = linprog(c, A_ub=A, b_ub=b)
 
-res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr], tol=1e-9)
+if not res.success:
+    print('Нет решения -> ставь нули')
+else:
+    x, y, z = np.round(res.x, 2) + 0.0
+    print('x =', x, ' y =', y, ' z =', z, ' целевая =', round(res.fun, 2))
 
-print(res)
+#Ответ: целевая = 9.00, x = 0. Для y и z вписывай то, что выведет код: у задачи несколько оптимальных решений, например (0; 2.33; 4.33) или (0; 0; 9).
 
-# %% Ответ с округлением (один знак)
-res.x.round(1)
-# x = 1.6, y = 2.8
+#Задача с max(x + 2y − 3z) (численно, округлить до 2 знаков)
 
 
-# %% Задача 3. max(15x + 10y + 8z − 6x² − 9y² − 5z² − 2xy + 4xz + 2yz), без ограничений
-# max F = min(−F), поэтому f = −F
-def f(x):
-    return (-15*x[0] - 10*x[1] - 8*x[2] + 6*x[0]**2 + 9*x[1]**2 + 5*x[2]**2
-            + 2*x[0]*x[1] - 4*x[0]*x[2] - 2*x[1]*x[2])
-def grad_f(x):
-    return np.array([-15 + 12*x[0] + 2*x[1] - 4*x[2],
-                     -10 + 2*x[0] + 18*x[1] - 2*x[2],
-                     -8 - 4*x[0] - 2*x[1] + 10*x[2]])
-
-# Начальное приближение
-x0 = np.array([1, 1, 1])
-
-# ограничений нет, поэтому constraints не задаём
-res = minimize(f, x0, method='SLSQP', jac=grad_f, tol=1e-9)
-
-print(res)
-
-# %% Ответ с округлением (три знака)
-res.x.round(3)
-# x = 1.687, y = 0.544, z = 1.584
+#Условие: max(x + 2y − 3z) при 2x² + y² + 2z² + 2xz ≤ 5, x, y, z ≥ 0.
 
 
-# %% Задача 4. Локальный минимум f(x, y) = 4x + 5xy − 5 ln x − 7 ln y
-# Область определения: x > 0, y > 0
-# Необходимое условие экстремума grad f = 0:
-#   f'_x = 4 + 5y − 5/x = 0
-#   f'_y = 5x − 7/y = 0
-import sympy as sp
+import numpy as np
+from scipy.optimize import minimize
 
-X, Y = sp.symbols('x y')
-F = 4*X + 5*X*Y - 5*sp.log(X) - 7*sp.log(Y)
+def f(v):
+    x, y, z = v
+    return -(x + 2*y - 3*z)           # max -> min через минус
 
-sol = sp.solve([sp.diff(F, X), sp.diff(F, Y)], [X, Y], dict=True)
-print(sol)
-# Получаем x = −1/2, y = −14/5: точка вне области x > 0, y > 0.
-# Стационарных точек нет → локального минимума нет → ответ: x = 0, y = 0
+cons = [{'type': 'ineq', 'fun': lambda v: 5 - (2*v[0]**2 + v[1]**2 + 2*v[2]**2 + 2*v[0]*v[2])}]
 
+res = minimize(f, x0=[0.5, 1, 0], bounds=[(0, None)]*3, constraints=cons,
+               method='SLSQP', options={'ftol': 1e-12})
 
-# %% Задача 5. max(x + y + z)  s.t.  x − y + z = 0,  x² + y² + 2z² = 9
-# max F = min(−F), поэтому f = −F
-def f(x):
-    return -x[0] - x[1] - x[2]
-def grad_f(x):
-    return np.array([-1, -1, -1])
+if not res.success:
+    print('Нет решения -> ставь нули')
+else:
+    x, y, z = np.round(res.x, 2) + 0.0
+    print('x =', x, ' y =', y, ' z =', z)
 
-# ограничения равенства задаём в виде словаря
-constr1 = {'type': 'eq',
-           'fun': lambda x: x[0] - x[1] + x[2],
-           'jac': lambda x: np.array([1, -1, 1]) }
-
-constr2 = {'type': 'eq',
-           'fun': lambda x: x[0]**2 + x[1]**2 + 2*x[2]**2 - 9,
-           'jac': lambda x: np.array([2*x[0], 2*x[1], 4*x[2]]) }
-
-# Начальное приближение
-x0 = np.array([1, 1, 1])
-
-res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr1, constr2], tol=1e-9)
-
-print(res)
-
-# %% Ответ с округлением (два знака)
-res.x.round(2)
-# x = 1.55, y = 2.32, z = 0.77
-
-
-# %% Задача 6. max(6x + 12y − 5x² − y² + 4xy)  s.t.  2x + y = 15
-# max F = min(−F), поэтому f = −F
-def f(x):
-    return -6*x[0] - 12*x[1] + 5*x[0]**2 + x[1]**2 - 4*x[0]*x[1]
-def grad_f(x):
-    return np.array([-6 + 10*x[0] - 4*x[1], -12 + 2*x[1] - 4*x[0]])
-
-# ограничения равенства задаём в виде словаря
-constr = {'type': 'eq',
-          'fun': lambda x: 2*x[0] + x[1] - 15,
-          'jac': lambda x: np.array([2, 1]) }
-
-# Начальное приближение
-x0 = np.array([1, 1])
-
-res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr], tol=1e-9)
-
-print(res)
-
-# %% Ответ с округлением (один знак)
-res.x.round(1)
-# x = 3.0, y = 9.0
-
-
-# %% Задача 7. min(x + y + z)  s.t.  x − y + z = 0,  x² + 2y² + 2z² = 8
-# Целевая функция f(x) и её градиент
-def f(x):
-    return x[0] + x[1] + x[2]
-def grad_f(x):
-    return np.array([1, 1, 1])
-
-# ограничения равенства задаём в виде словаря
-constr1 = {'type': 'eq',
-           'fun': lambda x: x[0] - x[1] + x[2],
-           'jac': lambda x: np.array([1, -1, 1]) }
-
-constr2 = {'type': 'eq',
-           'fun': lambda x: x[0]**2 + 2*x[1]**2 + 2*x[2]**2 - 8,
-           'jac': lambda x: np.array([2*x[0], 4*x[1], 4*x[2]]) }
-
-# Начальное приближение (для минимума берём отрицательные координаты)
-x0 = np.array([-1, -1, -1])
-
-res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr1, constr2], tol=1e-9)
-
-print(res)
-
-# %% Ответ с округлением (два знака)
-res.x.round(2)
-# x = -1.15, y = -1.73, z = -0.58
+# Ответ: x = 0.53, y = 2.11, z = 0.00.
