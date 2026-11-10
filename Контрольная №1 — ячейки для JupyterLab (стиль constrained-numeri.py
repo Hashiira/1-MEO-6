@@ -131,3 +131,65 @@ else:
     print('x =', x, ' y =', y, ' z =', z)
 
 # Ответ: x = 0.53, y = 2.11, z = 0.00.
+
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.optimize import linprog
+
+# ===== Задача =====
+# min(5x + 2y)
+# 3x + 2y >= 10
+#  x + 2y >= 6
+#  x + 4y >= 8
+#  x, y >= 0
+# linprog понимает только "<=", поэтому умножаем ограничения на -1
+
+# ===== Решение =====
+c = np.array([5, 2])                              # вектор целевой функции
+A = np.array([[-3, -2], [-1, -2], [-1, -4]])      # матрица A_ub
+b = np.array([-10, -6, -8])                       # вектор b_ub
+
+res = linprog(c, A_ub=A, b_ub=b)                  # x, y >= 0 заданы по умолчанию
+print(res)
+print('Решение (x, y):', res.x.round())
+print('Минимум 5x+2y =', round(res.fun))
+
+# ===== Визуализация =====
+x = np.linspace(-1, 10, 200)
+
+# прямые-ограничения
+plt.plot(x, (10 - 3*x) / 2, label='(1) 3x+2y=10')
+plt.plot(x, (6 - x) / 2, label='(2) x+2y=6')
+plt.plot(x, (8 - x) / 4, label='(3) x+4y=8')
+
+# допустимая область: выше всех прямых (неограниченная, рисуем до y=8)
+xs = np.linspace(0, 10, 300)
+y_low = np.maximum.reduce([(10 - 3*xs) / 2, (6 - xs) / 2,
+                           (8 - xs) / 4, np.zeros_like(xs)])
+plt.fill_between(xs, y_low, 8, color='green', alpha=0.2, label='допустимая область')
+
+# линия уровня целевой функции через оптимум: 5x + 2y = F
+F = res.fun
+plt.plot(x, (F - 5*x) / 2, 'r--', label=f'5x+2y={F:.0f}')
+
+# оптимальная точка
+plt.plot(res.x[0], res.x[1], 'ro')
+plt.annotate(f'({res.x[0]:.0f}; {res.x[1]:.0f})',
+             xy=(res.x[0], res.x[1]), xytext=(res.x[0] + 0.3, res.x[1] + 0.5))
+
+# оси координат
+plt.vlines(x=0, ymin=0, ymax=8, colors='b', linestyles='dotted')
+plt.hlines(y=0, xmin=0, xmax=10, colors='b', linestyles='dotted')
+
+# целочисленная сетка
+plt.xticks(ticks=np.arange(-1, 11, 1))
+plt.yticks(ticks=np.arange(-1, 9, 1))
+plt.xlim(-1, 10)
+plt.ylim(-1, 8)
+plt.grid(linewidth=0.3)
+
+plt.legend(loc=1)
+plt.show()
