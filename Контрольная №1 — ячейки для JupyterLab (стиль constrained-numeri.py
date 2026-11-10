@@ -223,3 +223,35 @@ print(res)
 
 #  Ответ с округлением
 print(res.x.round(1))
+
+
+
+
+import numpy as np
+from scipy.optimize import linprog
+
+# Задача:
+# max(2x + y + z)
+# s.t. x + 3y + z <= 8
+#      x + y <= 7
+#      x, y, z >= 0
+#
+# Перепишем в виде min(-2x - y - z)
+# Ограничение неотрицательности задано в linprog по умолчанию
+
+# вектор целевой функции
+c = np.array([-2, -1, -1])
+# матрица A
+A = np.array([ [1, 3, 1], [1, 1, 0] ])
+# вектор b
+b = np.array([8, 7])
+
+res = linprog(c, A_ub=A, b_ub=b)
+
+print(res)
+
+# решение с округлением
+print(res.x.round(2))
+
+# значение целевой функции (знак меняем обратно, т.к. искали минимум -f)
+print(round(-res.fun, 2))
