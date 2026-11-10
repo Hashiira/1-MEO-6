@@ -193,3 +193,33 @@ plt.grid(linewidth=0.3)
 
 plt.legend(loc=1)
 plt.show()
+
+
+
+
+import numpy as np
+from scipy.optimize import minimize, Bounds
+
+# Задача:
+# min(2x^2 + 5y^2 - 6xy - 3x - y)
+# s.t. x + 2y >= 45
+
+# Целевая функция f(x) и её градиент
+def f(x):
+    return 2*x[0]**2+5*x[1]**2-6*x[0]*x[1]-3*x[0]-x[1]
+def grad_f(x):
+    return np.array([4*x[0]-6*x[1]-3, -6*x[0]+10*x[1]-1])
+
+# ограничения неравенства задаём в виде словаря
+constr = {'type': 'ineq',
+          'fun': lambda x: x[0]+2*x[1]-45,
+          'jac': lambda x: np.array([1, 2]) }
+
+# Начальное приближение
+x0 = np.array([1, 1])
+
+res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr], tol=1e-9)
+print(res)
+
+#  Ответ с округлением
+print(res.x.round(1))
