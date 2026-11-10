@@ -255,3 +255,46 @@ print(res.x.round(2))
 
 # значение целевой функции (знак меняем обратно, т.к. искали минимум -f)
 print(round(-res.fun, 2))
+
+
+
+
+
+
+import numpy as np
+from scipy.optimize import minimize, Bounds
+
+# Задача:
+# max(3x + y + 2z)
+# s.t. 2x^2 + 2y^2 + 2z^2 + 2xy - 2xz <= 7
+#      x, y, z >= 0
+#
+# Тогда:
+# целевая функция f(x0,x1,x2) = -3x0 - x1 - 2x2  (max -> min)
+# ограничение h(x0,x1,x2) = -2x0^2 - 2x1^2 - 2x2^2 - 2x0x1 + 2x0x2 + 7 >= 0
+# нижняя граница a = 0 (Bounds)
+
+# Целевая функция f(x) и её градиент
+def f(x):
+    return -3*x[0]-x[1]-2*x[2]
+def grad_f(x):
+    return np.array([-3, -1, -2])
+
+# ограничения неравенства задаём в виде словаря
+constr = {'type': 'ineq',
+          'fun': lambda x: -2*x[0]**2-2*x[1]**2-2*x[2]**2-2*x[0]*x[1]+2*x[0]*x[2]+7,
+          'jac': lambda x: np.array([-4*x[0]-2*x[1]+2*x[2],
+                                     -4*x[1]-2*x[0],
+                                     -4*x[2]+2*x[0]]) }
+
+# Нижняя граница для (x0, x1, x2)
+bounds = Bounds(lb=[0, 0, 0])
+
+# Начальное приближение
+x0 = np.array([1, 1, 1])
+
+res = minimize(f, x0, method='SLSQP', jac=grad_f, constraints=[constr], tol=1e-9, bounds=bounds)
+print(res)
+
+#  Ответ с округлением
+print(res.x.round(2))
